@@ -4,9 +4,13 @@ import re
 import time
 from io import BytesIO
 import base64
-from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
 
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.os_manager import ChromeType
+
+from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
@@ -124,7 +128,25 @@ def download_excel(df, filename="output.xlsx"):
     b64 = base64.b64encode(excel_writer.read()).decode()
     href = f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="{filename}">Download {filename}</a>'
     return href
+def init_webdriver():
+    @st.cache_resource
+    def get_driver():
+        return webdriver.Chrome(
+            service=Service(
+                ChromeDriverManager(driver_version='125',chrome_type=ChromeType.CHROMIUM).install()
+            ),
+            options=options,
+        )
 
+    options = Options()
+    options.add_argument("--disable-gpu")
+    #options.add_argument("--headless")
+
+    driver = get_driver()
+    driver.maximize_window()
+    driver.get("https://kaspi.kz/shop/c/categories/")
+
+    return driver
 # Streamlit app
 def main():
     state = SessionState(search_column_name="", processed=False)
@@ -140,25 +162,7 @@ def main():
             with st.spinner("Processing..."):
                 search_list = get_exc_list(uploaded_file, search_column_name)
                 
-                # Initialize the Chrome WebDriver
-                chrome_options = webdriver.ChromeOptions()
-                # Uncomment the line below for debugging (run without headless mode)
-                chrome_options.add_argument("--headless")  # Comment this line out if you don't want headless mode
-                chrome_options.add_argument("--disable-gpu")
-                chrome_options.add_argument("--no-sandbox")
-                chrome_options.add_argument("--disable-dev-shm-usage")
-                chrome_options.add_experimental_option("detach", True)
-
-                # Use ChromeDriverManager to manage the ChromeDriver installation
-                driver_path = ChromeDriverManager().install()
-                service = Service(driver_path)
-                
-                driver = webdriver.Chrome(service=service, options=chrome_options)
-                driver.maximize_window()
-                
-                # Open the initial URL
-                website_url = 'https://kaspi.kz/shop/c/categories/'
-                driver.get(website_url)
+                driver = init_webdriver()
                 
                 all_products = []
                 file_contents = {}

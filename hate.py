@@ -5,6 +5,8 @@ import time
 from io import BytesIO
 import base64
 from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
@@ -141,8 +143,15 @@ def main():
                 # Initialize the Chrome WebDriver
                 chrome_options = webdriver.ChromeOptions()
                 # Uncomment the line below for debugging (run without headless mode)
-                chrome_options.add_argument("--headless")
-                service = Service('chromedriver.exe')
+                chrome_options.add_argument("--headless")  # Comment this line out if you don't want headless mode
+                chrome_options.add_argument("--disable-gpu")
+                chrome_options.add_argument("--no-sandbox")
+                chrome_options.add_argument("--disable-dev-shm-usage")
+                
+                # Use ChromeDriverManager to manage the ChromeDriver installation
+                driver_path = ChromeDriverManager().install()
+                service = Service(driver_path)
+                
                 driver = webdriver.Chrome(service=service, options=chrome_options)
                 driver.maximize_window()
                 

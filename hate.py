@@ -141,7 +141,7 @@ def main():
                 # Initialize the Chrome WebDriver
                 chrome_options = webdriver.ChromeOptions()
                 # Uncomment the line below for debugging (run without headless mode)
-                # chrome_options.add_argument("--headless")
+                chrome_options.add_argument("--headless")
                 service = Service('chromedriver.exe')
                 driver = webdriver.Chrome(service=service, options=chrome_options)
                 driver.maximize_window()
